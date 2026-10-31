@@ -1,5 +1,4 @@
-#LAB2 - Churn prediction API
-
+# AI381 Lab 2 - Churn Prediction API
 
 ![CI](https://github.com/Rand-hassan/AI381-LAB2/actions/workflows/ci.yml/badge.svg)
 
