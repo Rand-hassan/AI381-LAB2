@@ -1,5 +1,7 @@
-![CI](https://github.com/Rand-hassan/AI381-LAB2/actions/workflows/ci.yml/badge.svg)
 #LAB2 - Churn prediction API
+
+
+![CI](https://github.com/Rand-hassan/AI381-LAB2/actions/workflows/ci.yml/badge.svg)
 
 
 A machine learning API for customer churn prediction.
