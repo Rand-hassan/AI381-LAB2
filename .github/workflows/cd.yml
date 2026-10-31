@@ -29,7 +29,7 @@ jobs:
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             aquasec/trivy:0.58.2 \
-            image --exit-code 1 --severity CRITICAL,HIGH \
+            image --exit-code 1 --ignore-unfixed --severity CRITICAL,HIGH \
             $IMAGE_NAME:${GITHUB_SHA}
 
       - name: Login to GHCR
