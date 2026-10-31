@@ -3,6 +3,10 @@
 
 
 A machine learning API for customer churn prediction.
+
+
 start the service with this command:
+
+
 docker build -t ai381-churn-api . && docker run --rm -p 8000:8000 ai381-churn-api
 
