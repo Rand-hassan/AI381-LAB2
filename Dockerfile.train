@@ -1,0 +1,21 @@
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install Python dependencies
+COPY requirements-mlflow.txt .
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements-mlflow.txt
+
+# Copy project source code and datasets
+COPY src/ ./src/
+COPY churn_v1.csv .
+COPY churn_v2.csv .
+
+# Default dataset
+ENV DATA_FILE=churn_v1.csv
+
+CMD ["python", "-m", "src.train.train_mlflow"]
