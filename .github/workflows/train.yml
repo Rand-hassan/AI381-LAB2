@@ -1,0 +1,87 @@
+
+name: train-and-gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "churn_v1.csv"
+      - "churn_v2.csv"
+      - "requirements*.txt"
+      - "artifacts/**"
+      - ".github/workflows/train.yml"
+      - "docker-compose.mlflow.yml"
+
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "churn_v1.csv"
+      - "churn_v2.csv"
+      - "requirements*.txt"
+      - "artifacts/**"
+      - ".github/workflows/train.yml"
+      - "docker-compose.mlflow.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: train and gate
+    runs-on: ubuntu-latest
+
+    env:
+      MLFLOW_TRACKING_URI: http://localhost:5000
+      GIT_SHA: ${{ github.sha }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@751276eafca55f10f252026015f43c488f2322ba
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Start MLflow
+        run: docker compose -f docker-compose.mlflow.yml up -d --wait
+
+      - name: Find previous champion
+        run: |
+          BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
+          git show "${BASE:-HEAD~1}:artifacts/champion.json" > "$RUNNER_TEMP/champion.json" 2>/dev/null \
+            && echo "Champion found:" && cat "$RUNNER_TEMP/champion.json" \
+            || { echo "No previous champion found."; rm -f "$RUNNER_TEMP/champion.json"; }
+
+      - name: Train candidate models
+        run: |
+          echo "BATCH=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          BATCH="${GITHUB_SHA::7}" python -m src.train.train_mlflow
+
+      - name: Run promotion gate
+        run: python scripts/promote.py --champion-file "$RUNNER_TEMP/champion.json"
+
+      - name: Write workflow summary
+        if: always()
+        run: |
+          {
+            echo "### Training and Promotion Gate"
+            echo "Commit: \`${GITHUB_SHA}\`"
+            echo "Batch: \`${GITHUB_SHA::7}\`"
+            echo "Check the promotion gate step for the result."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Deployment will be added in the next part.

@@ -19,3 +19,6 @@ env/
 # OS files
 .DS_Store
 Thumbs.db
+!artifacts/champion.json
+!artifacts/metadata.json
+!artifacts/model.joblib

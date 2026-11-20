@@ -1,0 +1,5 @@
+-r requirements-mlflow.txt
+mlflow==3.17.0
+pytest
+httpx
+ruff
