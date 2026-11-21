@@ -35,16 +35,11 @@ def preprocessing() -> ColumnTransformer:
         ("num", StandardScaler(), schema.NUMERIC),
         ("cat", OneHotEncoder(handle_unknown="ignore"), schema.CATEGORICAL),
     ])
-CANDIDATES = {
-    "logreg": LogisticRegression(max_iter=1000),
 
-    "random_forest": RandomForestClassifier(
-        n_estimators=200,
-        max_depth=8,
-        random_state=42,
-    ),
-    "gradient_boosting": GradientBoostingClassifier(
-        random_state=42,
+CANDIDATES = {
+    "logreg": LogisticRegression(
+        max_iter=1000,
+        C=0.01,
     ),
 }
 
