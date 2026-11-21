@@ -19,13 +19,18 @@ echo "health:  $(cat /tmp/health.json)"
 PRED="$(curl -fsS -X POST "$BASE_URL/predict" -H 'Content-Type: application/json' -d @"$HERE/sample_request.json")"
 echo "predict: $PRED"
 
-# the prediction must be a probability between 0 and 1, and the service must say which model it is
-python3 - "$PRED" "$(cat /tmp/health.json)" <<'PY'
-import json, sys
+PYTHON_EXE="$(cygpath -u "$LOCALAPPDATA")/Programs/Python/Python314/python.exe"
+
+"$PYTHON_EXE" - "$PRED" "$(cat /tmp/health.json)" <<'PY'
+import json
+import sys
+
 pred, health = json.loads(sys.argv[1]), json.loads(sys.argv[2])
 p = pred["churn_probability"]
+
 assert 0.0 <= p <= 1.0, f"probability out of range: {p}"
 assert health.get("status") == "ok", "health is not ok"
 assert health.get("model_version"), "health does not say which model is running"
+
 print("PASS: smoke test ok, model_version =", health["model_version"])
 PY

@@ -1,36 +1,47 @@
-"""Lab 1 FastAPI skeleton: serves the model you saved from the notebook.
 
-Run it by hand (this is Round 1 of the race):
-    uvicorn app.main:app --port 8000
-Then send predictions with curl (see sample_request.json).
-"""
+"""Churn prediction service with MLflow model lineage."""
+
+import json
+import os
+from pathlib import Path
+
 import joblib
 import pandas as pd
 from fastapi import FastAPI
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-MODEL_PATH = "model.joblib"   # where the notebook saves the model (yes, hard-coded on purpose)
-FEATURES = ["tenure_months", "monthly_charges", "contract", "internet_service", "support_calls"]
+from src import schema
 
-app = FastAPI(title="AI381 Lab 1 churn API")
-class CustomerInput(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+MODEL_DIR = Path("artifacts")
+model = joblib.load(MODEL_DIR / "model.joblib")
+meta = json.loads((MODEL_DIR / "metadata.json").read_text(encoding="utf-8"))
 
-    tenure_months: float = Field(ge=0)
-    monthly_charges: float = Field(ge=0)
-    contract: str = Field(min_length=1)
-    internet_service: str = Field(min_length=1)
-    support_calls: int = Field(ge=0)
-model = joblib.load(MODEL_PATH)
+# Use the Git commit SHA provided by Docker.
+meta["model_version"] = os.getenv("GIT_SHA", "local")
+
+app = FastAPI(title="AI381 churn API", version=meta["model_version"])
+
+
+class Customer(BaseModel):
+    tenure_months: int = Field(ge=0, le=120)
+    monthly_charges: float = Field(gt=0, le=1000)
+    contract: str
+    internet_service: str
+    support_calls: int = Field(ge=0, le=50)
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    """Show which model is running and its MLflow lineage."""
+    return {"status": "ok", **meta}
 
 
 @app.post("/predict")
-def predict(customer: CustomerInput):
-    X = pd.DataFrame([customer.model_dump()])[FEATURES]
-    p = float(model.predict_proba(X)[0, 1])
-    return {"churn_probability": round(p, 3)}
+def predict(customer: Customer):
+    X = pd.DataFrame([customer.model_dump()])[schema.FEATURES]
+    probability = float(model.predict_proba(X)[0, 1])
+
+    return {
+        "churn_probability": round(probability, 3),
+        "model_version": meta["model_version"],
+    }

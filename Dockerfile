@@ -16,6 +16,9 @@ FROM python:3.14-slim
 
 WORKDIR /app
 
+ARG GIT_SHA=local
+ENV GIT_SHA=${GIT_SHA}
+
 RUN apt-get update && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/* \
     && pip install --no-cache-dir --upgrade pip setuptools wheel \
@@ -34,7 +37,8 @@ RUN rm -rf /usr/local/lib/python3.14/site-packages/pip \
            /usr/local/lib/python3.14/site-packages/pkg_resources
 
 COPY src/ ./src/
-COPY model.joblib .
+COPY artifacts/model.joblib ./artifacts/model.joblib
+COPY artifacts/metadata.json ./artifacts/metadata.json
 
 USER appuser
 
