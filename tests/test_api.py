@@ -6,13 +6,16 @@ client=TestClient(app)
 
 
 def test_health_endpoint():
-    response=client.get("/health")
+    response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
-def test_model_is_loaded():
-    from src.app.main import model
-    assert model is not None
+
+    data = response.json()
+
+    assert data["status"] == "ok"
+    assert data.get("model_version")
+    assert data.get("mlflow_run_id")
+    assert data.get("mlflow_model_version") is not None
 
 def test_predict_accepts_valid_input():
     response = client.post(
