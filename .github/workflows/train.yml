@@ -11,8 +11,10 @@ on:
       - "churn_v2.csv"
       - "requirements*.txt"
       - "artifacts/**"
-      - ".github/workflows/train.yml"
       - "docker-compose.mlflow.yml"
+      - "!src/app/**"
+      - "!scripts/smoke_test.sh"
+      - "!.github/workflows/train.yml"
 
   push:
     branches: [main]
@@ -23,8 +25,10 @@ on:
       - "churn_v2.csv"
       - "requirements*.txt"
       - "artifacts/**"
-      - ".github/workflows/train.yml"
       - "docker-compose.mlflow.yml"
+      - "!src/app/**"
+      - "!scripts/smoke_test.sh"
+      - "!.github/workflows/train.yml"
 
   workflow_dispatch:
 
@@ -79,8 +83,8 @@ jobs:
         run: |
           {
             echo "### Training and Promotion Gate"
-            echo "Commit: \`${GITHUB_SHA}\`"
-            echo "Batch: \`${GITHUB_SHA::7}\`"
+            echo "Commit: `${GITHUB_SHA}`"
+            echo "Batch: `${GITHUB_SHA::7}`"
             echo "Check the promotion gate step for the result."
           } >> "$GITHUB_STEP_SUMMARY"
 
